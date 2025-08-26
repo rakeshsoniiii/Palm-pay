@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayEasy - UPI Money Transfer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .secondary-btn {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .secondary-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .account-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .balance {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .account-info {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .transaction-item {
+            background: rgba(255, 255, 255, 0.8);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transaction-details {
+            flex: 1;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .transaction-amount.credit {
+            color: #28a745;
+        }
+
+        .transaction-amount.debit {
+            color: #dc3545;
+        }
+
+        .transaction-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 1px solid #c3e6cb;
+        }
+
+        .quick-amounts {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .quick-amount {
+            padding: 0.8rem;
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-amount:hover, .quick-amount.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-menu {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .nav-item {
+            padding: 0.8rem 1.5rem;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #e1e1e1;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            flex: 1;
+            margin: 0 0.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item.active, .nav-item:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .pin-input {
+            text-align: center;
+            font-size: 2rem;
+            letter-spacing: 0.5rem;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .quick-amounts {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PayEasy</h1>
+            <p>Fast & Secure Money Transfer</p>
+        </div>
+
+        <!-- Login Screen -->
+        <div class="screen active" id="loginScreen">
+            <div class="form-group">
+                <label for="loginPhone">Mobile Number</label>
+                <input type="tel" id="loginPhone" placeholder="Enter your mobile number" maxlength="10">
+            </div>
+            <div class="form-group">
+                <label for="loginPin">PIN</label>
+                <input type="password" id="loginPin" placeholder="Enter your 4-digit PIN" maxlength="4" class="pin-input">
+            </div>
+            <button onclick="login()">Login</button>
+            <button class="secondary-btn" onclick="showScreen('registerScreen')">New User? Register</button>
+            <div id="loginError"></div>
+        </div>
+
+        <!-- Registration Screen -->
+        <div class="screen" id="registerScreen">
+            <div class="form-group">
+                <label for="regName">Full Name</label>
+                <input type="text" id="regName" placeholder="Enter your full name">
+            </div>
+            <div class="form-group">
+                <label for="regPhone">Mobile Number</label>
+                <input type="tel" id="regPhone" placeholder="Enter your mobile number" maxlength="10">
+            </div>
+            <div class="form-group">
+                <label for="regPin">Create PIN</label>
+                <input type="password" id="regPin" placeholder="Create 4-digit PIN" maxlength="4" class="pin-input">
+            </div>
+            <div class="form-group">
+                <label for="regConfirmPin">Confirm PIN</label>
+                <input type="password" id="regConfirmPin" placeholder="Confirm your PIN" maxlength="4" class="pin-input">
+            </div>
+            <button onclick="register()">Register</button>
+            <button class="secondary-btn" onclick="showScreen('loginScreen')">Already have account? Login</button>
+            <div id="registerError"></div>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div class="screen" id="dashboardScreen">
+            <div class="account-card">
+                <div class="balance" id="userBalance">₹0</div>
+                <div class="account-info">
+                    <div id="userName">User Name</div>
+                    <div id="userPhone">+91 XXXXXXXXXX</div>
+                </div>
+            </div>
+
+            <div class="nav-menu">
+                <button class="nav-item active" onclick="showDashboardTab('home')">Home</button>
+                <button class="nav-item" onclick="showDashboardTab('transfer')">Transfer</button>
+                <button class="nav-item" onclick="showDashboardTab('history')">History</button>
+            </div>
+
+            <!-- Home Tab -->
+            <div id="homeTab" class="tab-content">
+                <button onclick="showScreen('transferScreen')">Send Money</button>
+                <button onclick="showScreen('addMoneyScreen')" class="secondary-btn">Add Money</button>
+                <button onclick="logout()" class="secondary-btn">Logout</button>
+            </div>
+
+            <!-- Transfer Tab -->
+            <div id="transferTab" class="tab-content" style="display: none;">
+                <button onclick="showScreen('transferScreen')">Send Money</button>
+                <div style="margin-top: 1rem;">
+                    <h3 style="margin-bottom: 1rem; color: #333;">Recent Transfers</h3>
+                    <div id="recentTransfers">No recent transfers</div>
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="historyTab" class="tab-content" style="display: none;">
+                <h3 style="margin-bottom: 1rem; color: #333;">Transaction History</h3>
+                <div id="transactionHistory">No transactions yet</div>
+            </div>
+        </div>
+
+        <!-- Transfer Screen -->
+        <div class="screen" id="transferScreen">
+            <button class="secondary-btn" onclick="showScreen('dashboardScreen')" style="width: auto; margin-bottom: 1.5rem;">← Back</button>
+            
+            <div class="form-group">
+                <label for="recipientPhone">Recipient's Mobile Number</label>
+                <input type="tel" id="recipientPhone" placeholder="Enter mobile number" maxlength="10">
+            </div>
+            
+            <div class="form-group">
+                <label>Quick Amount</label>
+                <div class="quick-amounts">
+                    <button class="quick-amount" onclick="selectAmount(500)">₹500</button>
+                    <button class="quick-amount" onclick="selectAmount(1000)">₹1000</button>
+                    <button class="quick-amount" onclick="selectAmount(2000)">₹2000</button>
+                    <button class="quick-amount" onclick="selectAmount(5000)">₹5000</button>
+                    <button class="quick-amount" onclick="selectAmount(10000)">₹10000</button>
+                    <button class="quick-amount" onclick="document.getElementById('transferAmount').focus()">Custom</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="transferAmount">Amount (₹)</label>
+                <input type="number" id="transferAmount" placeholder="Enter amount" min="1">
+            </div>
+            
+            <div class="form-group">
+                <label for="transferNote">Note (Optional)</label>
+                <input type="text" id="transferNote" placeholder="Add a note">
+            </div>
+            
+            <button onclick="initiateTransfer()">Send Money</button>
+            <div id="transferError"></div>
+        </div>
+
+        <!-- Transfer Confirmation Screen -->
+        <div class="screen" id="confirmationScreen">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h2 style="color: #333; margin-bottom: 1rem;">Confirm Transfer</h2>
+                <div id="transferSummary" style="background: rgba(102, 126, 234, 0.1); padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+                    <!-- Transfer details will be populated here -->
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPin">Enter your PIN to confirm</label>
+                <input type="password" id="confirmPin" placeholder="Enter PIN" maxlength="4" class="pin-input">
+            </div>
+            
+            <button onclick="confirmTransfer()">Confirm & Send</button>
+            <button class="secondary-btn" onclick="showScreen('transferScreen')">Cancel</button>
+            <div id="confirmError"></div>
+        </div>
+
+        <!-- Success Screen -->
+        <div class="screen" id="successScreen">
+            <div style="text-align: center;">
+                <div style="font-size: 4rem; color: #28a745; margin-bottom: 1rem;">✓</div>
+                <h2 style="color: #28a745; margin-bottom: 1rem;">Transfer Successful!</h2>
+                <div id="successDetails" style="background: rgba(40, 167, 69, 0.1); padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem;">
+                    <!-- Success details will be populated here -->
+                </div>
+                <button onclick="showScreen('dashboardScreen')">Back to Dashboard</button>
+                <button class="secondary-btn" onclick="showScreen('transferScreen')">Send Again</button>
+            </div>
+        </div>
+
+        <!-- Add Money Screen -->
+        <div class="screen" id="addMoneyScreen">
+            <button class="secondary-btn" onclick="showScreen('dashboardScreen')" style="width: auto; margin-bottom: 1.5rem;">← Back</button>
+            
+            <div class="form-group">
+                <label>Add Money to Wallet</label>
+                <div class="quick-amounts">
+                    <button class="quick-amount" onclick="selectAddAmount(1000)">₹1000</button>
+                    <button class="quick-amount" onclick="selectAddAmount(2000)">₹2000</button>
+                    <button class="quick-amount" onclick="selectAddAmount(5000)">₹5000</button>
+                    <button class="quick-amount" onclick="selectAddAmount(10000)">₹10000</button>
+                    <button class="quick-amount" onclick="selectAddAmount(20000)">₹20000</button>
+                    <button class="quick-amount" onclick="document.getElementById('addAmount').focus()">Custom</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="addAmount">Amount (₹)</label>
+                <input type="number" id="addAmount" placeholder="Enter amount" min="1">
+            </div>
+            
+            <button onclick="addMoney()">Add Money</button>
+            <div id="addMoneyError"></div>
+        </div>
+    </div>
+
+    <script>
+        // Demo data storage (in real app, this would be a database)
+        let users = [
+            {
+                name: "Demo User",
+                phone: "9876543210",
+                pin: "1234",
+                balance: 10000,
+                transactions: []
+            },
+            {
+                name: "John Doe",
+                phone: "9876543211",
+                pin: "1234",
+                balance: 5000,
+                transactions: []
+            },
+            {
+                name: "Jane Smith",
+                phone: "9876543212",
+                pin: "1234",
+                balance: 8000,
+                transactions: []
+            }
+        ];
+
+        let currentUser = null;
+        let currentTransfer = null;
+
+        // Screen management
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Dashboard tab management
+        function showDashboardTab(tabName) {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + 'Tab').style.display = 'block';
+            
+            if (tabName === 'history') {
+                loadTransactionHistory();
+            }
+        }
+
+        // User authentication
+        function login() {
+            const phone = document.getElementById('loginPhone').value;
+            const pin = document.getElementById('loginPin').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (!phone || !pin) {
+                showError(errorDiv, 'Please enter both phone number and PIN');
+                return;
+            }
+
+            if (phone.length !== 10 || pin.length !== 4) {
+                showError(errorDiv, 'Please enter valid phone number and PIN');
+                return;
+            }
+
+            const user = users.find(u => u.phone === phone && u.pin === pin);
+            if (user) {
+                currentUser = user;
+                showDashboard();
+                showScreen('dashboardScreen');
+                clearError(errorDiv);
+            } else {
+                showError(errorDiv, 'Invalid phone number or PIN');
+            }
+        }
+
+        function register() {
+            const name = document.getElementById('regName').value;
+            const phone = document.getElementById('regPhone').value;
+            const pin = document.getElementById('regPin').value;
+            const confirmPin = document.getElementById('regConfirmPin').value;
+            const errorDiv = document.getElementById('registerError');
+
+            if (!name || !phone || !pin || !confirmPin) {
+                showError(errorDiv, 'Please fill all fields');
+                return;
+            }
+
+            if (phone.length !== 10) {
+                showError(errorDiv, 'Please enter valid phone number');
+                return;
+            }
+
+            if (pin.length !== 4) {
+                showError(errorDiv, 'PIN must be 4 digits');
+                return;
+            }
+
+            if (pin !== confirmPin) {
+                showError(errorDiv, 'PINs do not match');
+                return;
+            }
+
+            if (users.find(u => u.phone === phone)) {
+                showError(errorDiv, 'Phone number already registered');
+                return;
+            }
+
+            // Create new user
+            const newUser = {
+                name,
+                phone,
+                pin,
+                balance: 1000, // Starting bonus
+                transactions: [{
+                    type: 'credit',
+                    amount: 1000,
+                    description: 'Welcome bonus',
+                    date: new Date().toISOString(),
+                    id: generateTransactionId()
+                }]
+            };
+
+            users.push(newUser);
+            showSuccess(errorDiv, 'Registration successful! You can now login.');
+            
+            // Clear form
+            document.getElementById('regName').value = '';
+            document.getElementById('regPhone').value = '';
+            document.getElementById('regPin').value = '';
+            document.getElementById('regConfirmPin').value = '';
+            
+            setTimeout(() => {
+                showScreen('loginScreen');
+                clearError(errorDiv);
+            }, 2000);
+        }
+
+        function logout() {
+            currentUser = null;
+            showScreen('loginScreen');
+            document.getElementById('loginPhone').value = '';
+            document.getElementById('loginPin').value = '';
+        }
+
+        // Dashboard functions
+        function showDashboard() {
+            document.getElementById('userName').textContent = currentUser.name;
+            document.getElementById('userPhone').textContent = '+91 ' + currentUser.phone;
+            document.getElementById('userBalance').textContent = '₹' + currentUser.balance.toLocaleString();
+        }
+
+        // Transfer functions
+        function selectAmount(amount) {
+            document.querySelectorAll('.quick-amount').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            document.getElementById('transferAmount').value = amount;
+        }
+
+        function selectAddAmount(amount) {
+            document.querySelectorAll('.quick-amount').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            event.target.classList.add('selected');
+            document.getElementById('addAmount').value = amount;
+        }
+
+        function initiateTransfer() {
+            const recipientPhone = document.getElementById('recipientPhone').value;
+            const amount = parseFloat(document.getElementById('transferAmount').value);
+            const note = document.getElementById('transferNote').value;
+            const errorDiv = document.getElementById('transferError');
+
+            if (!recipientPhone || !amount) {
+                showError(errorDiv, 'Please enter recipient phone and amount');
+                return;
+            }
+
+            if (recipientPhone.length !== 10) {
+                showError(errorDiv, 'Please enter valid phone number');
+                return;
+            }
+
+            if (recipientPhone === currentUser.phone) {
+                showError(errorDiv, 'Cannot transfer to yourself');
+                return;
+            }
+
+            if (amount <= 0) {
+                showError(errorDiv, 'Amount must be greater than 0');
+                return;
+            }
+
+            if (amount > currentUser.balance) {
+                showError(errorDiv, 'Insufficient balance');
+                return;
+            }
+
+            const recipient = users.find(u => u.phone === recipientPhone);
+            if (!recipient) {
+                showError(errorDiv, 'Recipient not found');
+                return;
+            }
+
+            // Store transfer details
+            currentTransfer = {
+                recipient,
+                amount,
+                note: note || 'Money transfer'
+            };
+
+            // Show confirmation screen
+            document.getElementById('transferSummary').innerHTML = `
+                <div style="margin-bottom: 1rem;"><strong>To:</strong> ${recipient.name}</div>
+                <div style="margin-bottom: 1rem;"><strong>Phone:</strong> +91 ${recipient.phone}</div>
+                <div style="margin-bottom: 1rem;"><strong>Amount:</strong> ₹${amount.toLocaleString()}</div>
+                <div><strong>Note:</strong> ${currentTransfer.note}</div>
+            `;
+
+            showScreen('confirmationScreen');
+            clearError(errorDiv);
+        }
+
+        function confirmTransfer() {
+            const confirmPin = document.getElementById('confirmPin').value;
+            const errorDiv = document.getElementById('confirmError');
+
+            if (!confirmPin) {
+                showError(errorDiv, 'Please enter your PIN');
+                return;
+            }
+
+            if (confirmPin !== currentUser.pin) {
+                showError(errorDiv, 'Invalid PIN');
+                return;
+            }
+
+            if (currentTransfer.amount > currentUser.balance) {
+                showError(errorDiv, 'Insufficient balance');
+                return;
+            }
+
+            // Process transfer
+            const transactionId = generateTransactionId();
+            const timestamp = new Date().toISOString();
+
+            // Deduct from sender
+            currentUser.balance -= currentTransfer.amount;
+            currentUser.transactions.push({
+                id: transactionId,
+                type: 'debit',
+                amount: currentTransfer.amount,
+                description: Transfer to ${currentTransfer.recipient.name},
+                recipientPhone: currentTransfer.recipient.phone,
+                note: currentTransfer.note,
+                date: timestamp
+            });
+
+            // Add to recipient
+            currentTransfer.recipient.balance += currentTransfer.amount;
+            currentTransfer.recipient.transactions.push({
+                id: transactionId,
+                type: 'credit',
+                amount: currentTransfer.amount,
+                description: Received from ${currentUser.name},
+                senderPhone: currentUser.phone,
+                note: currentTransfer.note,
+                date: timestamp
+            });
+
+            // Show success screen
+            document.getElementById('successDetails').innerHTML = `
+                <div style="margin-bottom: 1rem;"><strong>Transaction ID:</strong> ${transactionId}</div>
+                <div style="margin-bottom: 1rem;"><strong>Amount:</strong> ₹${currentTransfer.amount.toLocaleString()}</div>
+                <div style="margin-bottom: 1rem;"><strong>To:</strong> ${currentTransfer.recipient.name}</div>
+                <div style="margin-bottom: 1rem;"><strong>Remaining Balance:</strong> ₹${currentUser.balance.toLocaleString()}</div>
+                <div><strong>Date:</strong> ${new Date(timestamp).toLocaleString()}</div>
+            `;
+
+            showScreen('successScreen');
+            
+            // Clear forms
+            document.getElementById('recipientPhone').value = '';
+            document.getElementById('transferAmount').value = '';
+            document.getElementById('transferNote').value = '';
+            document.getElementById('confirmPin').value = '';
+            document.querySelectorAll('.quick-amount').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            clearError(errorDiv);
+            currentTransfer = null;
+        }
+
+        function addMoney() {
+            const amount = parseFloat(document.getElementById('addAmount').value);
+            const errorDiv = document.getElementById('addMoneyError');
+
+            if (!amount || amount <= 0) {
+                showError(errorDiv, 'Please enter valid amount');
+                return;
+            }
+
+            if (amount > 50000) {
+                showError(errorDiv, 'Maximum limit is ₹50,000');
+                return;
+            }
+
+            // Simulate payment gateway success
+            currentUser.balance += amount;
+            currentUser.transactions.push({
+                id: generateTransactionId(),
+                type: 'credit',
+                amount: amount,
+                description: 'Money added to wallet',
+                date: new Date().toISOString()
+            });
+
+            showSuccess(errorDiv, ₹${amount.toLocaleString()} added successfully!);
+            document.getElementById('addAmount').value = '';
+            document.querySelectorAll('.quick-amount').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+
+            setTimeout(() => {
+                showScreen('dashboardScreen');
+                showDashboard();
+                clearError(errorDiv);
+            }, 2000);
+        }
+
+        function loadTransactionHistory() {
+            const historyDiv = document.getElementById('transactionHistory');
+            
+            if (currentUser.transactions.length === 0) {
+                historyDiv.innerHTML = '<div style="text-align: center; color: #666; padding: 2rem;">No transactions yet</div>';
+                return;
+            }
+
+            const sortedTransactions = [...currentUser.transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            historyDiv.innerHTML = sortedTransactions.map(transaction => `
+                <div class="transaction-item">
+                    <div class="transaction-details">
+                        <div style="font-weight: 500; margin-bottom: 0.25rem;">${transaction.description}</div>
+                        ${transaction.note ? <div style="color: #666; font-size: 0.9rem; margin-bottom: 0.25rem;">"${transaction.note}"</div> : ''}
+                        <div class="transaction-date">${new Date(transaction.date).toLocaleString()}</div>
+                        ${transaction.id ? <div style="color: #999; font-size: 0.8rem;">ID: ${transaction.id}</div> : ''}
+                    </div>
+                    <div class="transaction-amount ${transaction.type}">
+                        ${transaction.type === 'credit' ? '+' : '-'}₹${transaction.amount.toLocaleString()}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Utility functions
+        function generateTransactionId() {
+            return 'TXN' + Date.now() + Math.random().toString(36).substr(2, 9).toUpperCase();
+        }
+
+        function showError(element, message) {
+            element.innerHTML = <div class="error">${message}</div>;
+        }
+
+        function showSuccess(element, message) {
+            element.innerHTML = <div class="success">${message}</div>;
+        }
+
+        function clearError(element) {
+            element.innerHTML = '';
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-fill demo credentials for testing
+            document.getElementById('loginPhone').value = '9876543210';
+            document.getElementById('loginPin').value = '1234';
+        });
+
+        // Allow Enter key to submit forms
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const activeScreen = document.querySelector('.screen.active');
+                if (activeScreen.id === 'loginScreen') login();
+                else if (activeScreen.id === 'registerScreen') register();
+                else if (activeScreen.id === 'transferScreen') initiateTransfer();
+                else if (activeScreen.id === 'confirmationScreen') confirmTransfer();
+                else if (activeScreen.id === 'addMoneyScreen') addMoney();
+            }
+        });
+    </script>
+</body>
+</html>
